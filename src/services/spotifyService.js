@@ -1,23 +1,10 @@
-require('dotenv').config();
-const express = require('express');
 const SpotifyWebApi = require('spotify-web-api-node');
-const chartRoutes = require('./routes/chartRoutes');
-
-const app = express();
+require('dotenv').config();
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process.env.SPOTIFY_REDIRECT_URI,
-});
-
-app.use(express.json());
-app.use(express.static('public'));
-
-app.use('/api/charts', chartRoutes);
-
-app.get('/', (req, res) => {
-  res.send('Welcome to the Spotify Charts API!');
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI
 });
 
 async function authenticateSpotify() {
@@ -30,4 +17,17 @@ async function authenticateSpotify() {
   }
 }
 
-module.exports = { app, spotifyApi, authenticateSpotify };
+async function getTopTracks(timeRange = 'short_term', limit = 50) {
+  try {
+    const data = await spotifyApi.getMyTopTracks({ time_range: timeRange, limit: limit });
+    return data.body.items;
+  } catch (error) {
+    console.error('Error fetching top tracks:', error);
+    return [];
+  }
+}
+
+module.exports = {
+  authenticateSpotify,
+  getTopTracks
+};
